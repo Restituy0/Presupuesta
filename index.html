@@ -31,13 +31,14 @@ input[type=number]{-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
 /* NAV */
-#nav{position:sticky;top:0;z-index:200;height:54px;background:rgba(12,15,26,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 1.1rem;gap:10px}
+#nav{position:sticky;top:0;z-index:200;height:54px;background:rgba(12,15,26,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--b1);display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:0 1.1rem;gap:10px}
 .logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--t1);flex-shrink:0}
 .logo-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--g),var(--v));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;font-family:var(--m);box-shadow:0 0 16px rgba(16,212,142,.2);flex-shrink:0;letter-spacing:-.02em;transition:all .3s}
 .logo-name{font-size:15px;font-weight:800;letter-spacing:-.03em}
 .logo-dot{color:var(--g)}
 .nav-r{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:auto}
-.nav-chip{font-size:12px;font-weight:600;color:var(--t2);background:var(--s2);border:1px solid var(--b1);border-radius:20px;padding:5px 14px;flex:1 1 auto;min-width:0;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:all .15s;text-align:center}
+.nav-chip-wrap{display:flex;justify-content:center;min-width:0;overflow:hidden}
+.nav-chip{font-size:12px;font-weight:600;color:var(--t2);background:var(--s2);border:1px solid var(--b1);border-radius:20px;padding:5px 14px;min-width:0;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:all .15s;text-align:center}
 .nav-btn{width:36px;height:36px;border-radius:9px;border:1px solid var(--b1);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;background:var(--s2);color:var(--t2)}
 .nav-btn:hover{color:var(--t1);border-color:var(--b2);background:var(--s3)}
 .nav-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -368,7 +369,16 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 </head>
 <body>
 
+<div id="boot-loading" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+    <div class="logo-mark" style="width:44px;height:44px;font-size:18px;animation:pulseLogo 1.4s ease-in-out infinite">P</div>
+    <div style="font-size:12px;color:var(--t3);font-family:var(--m)">Cargando Presupuesta…</div>
+  </div>
+</div>
+<style>@keyframes pulseLogo{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.94)}}</style>
+
 <div id="auth-root" style="display:none"></div>
+<div id="toasts"></div>
 
 <div id="app-root" style="display:none">
 
@@ -378,7 +388,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     <div class="logo-mark" id="lmark">P</div>
     <span class="logo-name">Presupuesta<span class="logo-dot">.</span></span>
   </a>
-  <span class="nav-chip" id="nav-chip">Sin período</span>
+  <div class="nav-chip-wrap"><span class="nav-chip" id="nav-chip">Sin período</span></div>
   <div class="nav-r">
     <div class="conn-dd">
       <button class="nav-btn" id="conn-btn" onclick="toggleConnPanel(event)" title="Estado de conexión">
@@ -410,13 +420,12 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       </button>
       <div class="acct-panel" id="acct-panel">
         <div class="acct-email" id="user-email">—</div>
+        <button class="btn btn-gh" style="width:100%;justify-content:center;margin-top:10px" onclick="abrirPerfil()">Editar perfil</button>
         <button class="btn btn-gh" style="width:100%;justify-content:center;margin-top:8px" onclick="logout()">Cerrar sesión</button>
       </div>
     </div>
   </div>
 </nav>
-
-<div id="toasts"></div>
 
 <!-- MODAL CFG -->
 <div class="ov" id="ov-cfg">
@@ -538,6 +547,45 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <div class="carry-note">Este monto aparecerá como saldo anterior al crear el próximo período</div>
     </div>
     <div class="m-acts" style="margin-top:1rem"><button class="btn btn-gh" onclick="closeOv('ov-close')">Cancelar</button><button class="btn btn-g" onclick="confirmarCierre()">Confirmar cierre</button></div>
+  </div>
+</div>
+
+<!-- MODAL PERFIL -->
+<div class="ov" id="ov-perfil">
+  <div class="mbox" style="max-width:400px">
+    <div class="m-ttl">Mi perfil</div>
+    <div class="m-body">
+      <div class="m-fld">
+        <label class="m-lbl">Nombre</label>
+        <input class="m-inp" type="text" id="perfil-nombre" placeholder="Tu nombre">
+      </div>
+      <div class="m-fld">
+        <label class="m-lbl">Correo</label>
+        <input class="m-inp" type="email" id="perfil-email" disabled style="opacity:.55;cursor:not-allowed">
+      </div>
+    </div>
+    <div class="m-acts"><button class="btn btn-gh" onclick="closeOv('ov-perfil')">Cancelar</button><button class="btn btn-g" onclick="guardarPerfil()">Guardar cambios</button></div>
+    <div class="m-sep" style="margin-top:1.25rem"></div>
+    <div style="margin-top:1rem">
+      <div class="m-lbl" style="color:var(--r);margin-bottom:8px">Zona de peligro</div>
+      <button class="btn btn-r" style="width:100%;justify-content:center" onclick="closeOv('ov-perfil');$('del-cuenta-confirm').value='';$('del-cuenta-err').textContent='';openOv('ov-del-cuenta')">Eliminar mi cuenta</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR CUENTA -->
+<div class="ov" id="ov-del-cuenta">
+  <div class="mbox" style="max-width:380px">
+    <div class="m-ttl" style="color:var(--r)">Eliminar cuenta</div>
+    <p style="font-size:14px;color:var(--t2);line-height:1.6;margin-bottom:1rem">
+      Esto borrará permanentemente tu cuenta y <strong style="color:var(--t1)">todos</strong> tus períodos y gastos. No se puede deshacer.
+    </p>
+    <div class="m-fld" style="margin-bottom:1rem">
+      <label class="m-lbl">Escribe ELIMINAR para confirmar</label>
+      <input class="m-inp" type="text" id="del-cuenta-confirm" placeholder="ELIMINAR">
+    </div>
+    <div class="auth-err" id="del-cuenta-err"></div>
+    <div class="m-acts"><button class="btn btn-gh" onclick="closeOv('ov-del-cuenta')">Cancelar</button><button class="btn btn-r" onclick="eliminarCuenta()">Eliminar definitivamente</button></div>
   </div>
 </div>
 
@@ -836,7 +884,7 @@ function daysSince(isoIni){
 // ═══════════════════════════════════════════════
 async function init(){
   // Wire modals close-on-overlay
-  ['ov-cfg','ov-per','ov-del','ov-close'].forEach(id=>{
+  ['ov-cfg','ov-per','ov-del','ov-close','ov-perfil','ov-del-cuenta'].forEach(id=>{
     $(id)?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv(id)});
   });
   $('mper-cancel').onclick=()=>closeOv('ov-per');
@@ -1417,8 +1465,12 @@ async function addGasto(){
   }finally{S.adding=false;$('btn-add').disabled=false}
 }
 async function rmG(id){
-  await Data.deleteGasto(id);
-  S.gastos=S.gastos.filter(g=>g.id!==id);renderG();calc();
+  try{
+    await Data.deleteGasto(id);
+    S.gastos=S.gastos.filter(g=>g.id!==id);renderG();calc();
+  }catch(e){
+    toast('No se pudo eliminar el gasto: '+e.message,'bad');
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -1451,16 +1503,23 @@ async function selHist(id){await loadPer(id);window.scrollTo({top:0,behavior:'sm
 // ARRANQUE CON AUTENTICACIÓN
 // ═══════════════════════════════════════════════
 async function bootstrap(){
-  const { data:{ session } } = await sb.auth.getSession();
-  if(session?.user){
-    showApp(session.user);
-  }else{
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session?.user){
+      showApp(session.user);
+    }else{
+      showAuth();
+    }
+    sb.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_IN'&&session?.user){ showApp(session.user); }
+      else if(event==='SIGNED_OUT'){ showAuth(); }
+    });
+  }catch(e){
     showAuth();
+    toast('No se pudo conectar. Revisa tu internet.','bad',5000);
+  }finally{
+    $('boot-loading')?.remove();
   }
-  sb.auth.onAuthStateChange((event,session)=>{
-    if(event==='SIGNED_IN'&&session?.user){ showApp(session.user); }
-    else if(event==='SIGNED_OUT'){ showAuth(); }
-  });
 }
 function showAuth(){
   $('app-root').style.display='none';
@@ -1468,10 +1527,12 @@ function showAuth(){
   AuthUI.init(()=>{}); // showApp se dispara via onAuthStateChange
 }
 let appStarted=false;
+let currentAuthUser=null;
 function showApp(user){
   $('auth-root').style.display='none';
   $('app-root').style.display='';
   Data.setUser(user.id);
+  currentAuthUser=user;
   $('user-email').textContent=user.email;
   const displayName = user.user_metadata?.display_name || user.email.split('@')[0];
   $('acct-name').textContent=displayName;
@@ -1481,6 +1542,49 @@ function showApp(user){
 async function logout(){
   await sb.auth.signOut();
 }
+
+// ═══════════════════════════════════════════════
+// PERFIL DE USUARIO
+// ═══════════════════════════════════════════════
+
+function abrirPerfil(){
+  $('acct-panel')?.classList.remove('on');
+  if(!currentAuthUser)return;
+  $('perfil-nombre').value=currentAuthUser.user_metadata?.display_name||'';
+  $('perfil-email').value=currentAuthUser.email;
+  openOv('ov-perfil');
+}
+
+async function guardarPerfil(){
+  const nombre=$('perfil-nombre').value.trim();
+  if(!nombre){ toast('El nombre no puede estar vacío','warn'); return; }
+  const { data, error } = await sb.auth.updateUser({ data: { display_name: nombre } });
+  if(error){ toast('No se pudo guardar: '+error.message,'bad'); return; }
+  currentAuthUser=data.user;
+  $('acct-name').textContent=nombre;
+  $('acct-avatar').textContent=nombre.charAt(0).toUpperCase();
+  closeOv('ov-perfil');
+  toast('✓ Perfil actualizado');
+}
+
+async function eliminarCuenta(){
+  const confirm=$('del-cuenta-confirm').value.trim();
+  if(confirm!=='ELIMINAR'){ $('del-cuenta-err').textContent='Escribe ELIMINAR exactamente para confirmar.'; return; }
+  $('del-cuenta-err').textContent='';
+  try{
+    // Borra todos los datos del usuario. Las políticas RLS garantizan que
+    // esto solo afecta filas propias del usuario autenticado.
+    const uid=Data.getUser();
+    await sb.from('gastos').delete().eq('user_id',uid);
+    await sb.from('periodos').delete().eq('user_id',uid);
+    await sb.from('config').delete().eq('user_id',uid);
+    toast('Tus datos fueron eliminados. Cerrando sesión...','ok',3000);
+    setTimeout(async()=>{ await sb.auth.signOut(); }, 1500);
+  }catch(e){
+    $('del-cuenta-err').textContent='Error al eliminar: '+e.message;
+  }
+}
+
 bootstrap();
 </script>
 </body>
