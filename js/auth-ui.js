@@ -5,6 +5,9 @@
 const AuthUI = (() => {
   let onLoggedIn = null;
 
+  const eyeOpen = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const eyeOff  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a18.5 18.5 0 0 1 4.22-5.06M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
   function render() {
     const root = document.getElementById('auth-root');
     root.innerHTML = `
@@ -20,16 +23,35 @@ const AuthUI = (() => {
           </div>
 
           <div id="auth-form-login" class="auth-form">
-            <div class="m-fld"><label class="m-lbl">Correo</label><input class="m-inp" type="email" id="li-email" placeholder="tu@correo.com"></div>
-            <div class="m-fld"><label class="m-lbl">Contraseña</label><input class="m-inp" type="password" id="li-pass" placeholder="••••••••"></div>
+            <div class="m-fld"><label class="m-lbl">Correo</label><input class="m-inp" type="email" id="li-email" placeholder="tu@correo.com" autocomplete="email"></div>
+            <div class="m-fld">
+              <label class="m-lbl">Contraseña</label>
+              <div class="pwd-wrap">
+                <input class="m-inp" type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password">
+                <button type="button" class="pwd-eye" onclick="AuthUI.toggleEye('li-pass',this)">${eyeOpen}</button>
+              </div>
+            </div>
             <div class="auth-err" id="li-err"></div>
             <button class="btn btn-g" style="width:100%;justify-content:center;margin-top:6px" onclick="AuthUI.login()">Entrar</button>
             <div class="auth-link" onclick="AuthUI.forgotPass()">¿Olvidaste tu contraseña?</div>
           </div>
 
           <div id="auth-form-signup" class="auth-form" style="display:none">
-            <div class="m-fld"><label class="m-lbl">Correo</label><input class="m-inp" type="email" id="su-email" placeholder="tu@correo.com"></div>
-            <div class="m-fld"><label class="m-lbl">Contraseña</label><input class="m-inp" type="password" id="su-pass" placeholder="Mínimo 6 caracteres"></div>
+            <div class="m-fld"><label class="m-lbl">Correo</label><input class="m-inp" type="email" id="su-email" placeholder="tu@correo.com" autocomplete="email"></div>
+            <div class="m-fld">
+              <label class="m-lbl">Contraseña</label>
+              <div class="pwd-wrap">
+                <input class="m-inp" type="password" id="su-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                <button type="button" class="pwd-eye" onclick="AuthUI.toggleEye('su-pass',this)">${eyeOpen}</button>
+              </div>
+            </div>
+            <div class="m-fld">
+              <label class="m-lbl">Confirmar contraseña</label>
+              <div class="pwd-wrap">
+                <input class="m-inp" type="password" id="su-pass2" placeholder="Repite la contraseña" autocomplete="new-password">
+                <button type="button" class="pwd-eye" onclick="AuthUI.toggleEye('su-pass2',this)">${eyeOpen}</button>
+              </div>
+            </div>
             <div class="auth-err" id="su-err"></div>
             <button class="btn btn-g" style="width:100%;justify-content:center;margin-top:6px" onclick="AuthUI.signup()">Crear cuenta</button>
           </div>
@@ -51,6 +73,13 @@ const AuthUI = (() => {
     document.getElementById('auth-confirm').style.display = 'none';
   }
 
+  function toggleEye(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    btn.innerHTML = show ? eyeOff : eyeOpen;
+  }
+
   function showErr(id, msg) { const e = document.getElementById(id); e.textContent = msg; }
 
   async function login() {
@@ -70,8 +99,10 @@ const AuthUI = (() => {
     showErr('su-err', '');
     const email = document.getElementById('su-email').value.trim();
     const password = document.getElementById('su-pass').value;
-    if (!email || !password) { showErr('su-err', 'Completa ambos campos.'); return; }
+    const password2 = document.getElementById('su-pass2').value;
+    if (!email || !password || !password2) { showErr('su-err', 'Completa todos los campos.'); return; }
     if (password.length < 6) { showErr('su-err', 'La contraseña debe tener al menos 6 caracteres.'); return; }
+    if (password !== password2) { showErr('su-err', 'Las contraseñas no coinciden.'); return; }
     const { error } = await sb.auth.signUp({ email, password });
     if (error) { showErr('su-err', error.message); return; }
     document.getElementById('auth-form-signup').style.display = 'none';
@@ -90,5 +121,5 @@ const AuthUI = (() => {
     render();
   }
 
-  return { init, switchTab, login, signup, forgotPass };
+  return { init, switchTab, login, signup, forgotPass, toggleEye };
 })();
