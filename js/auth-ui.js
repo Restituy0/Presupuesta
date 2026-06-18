@@ -23,11 +23,11 @@ const AuthUI = (() => {
           </div>
 
           <div id="auth-form-login" class="auth-form">
-            <div class="m-fld"><label class="m-lbl">Correo</label><input class="m-inp" type="email" id="li-email" placeholder="tu@correo.com" autocomplete="email"></div>
+            <div class="m-fld"><label class="m-lbl">Correo</label><input class="m-inp" type="email" id="li-email" placeholder="tu@correo.com" autocomplete="email" onkeydown="AuthUI.onEnter(event,'login')"></div>
             <div class="m-fld">
               <label class="m-lbl">Contraseña</label>
               <div class="pwd-wrap">
-                <input class="m-inp" type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password">
+                <input class="m-inp" type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="AuthUI.onEnter(event,'login')">
                 <button type="button" class="pwd-eye" onclick="AuthUI.toggleEye('li-pass',this)">${eyeOpen}</button>
               </div>
             </div>
@@ -37,18 +37,19 @@ const AuthUI = (() => {
           </div>
 
           <div id="auth-form-signup" class="auth-form" style="display:none">
-            <div class="m-fld"><label class="m-lbl">Correo</label><input class="m-inp" type="email" id="su-email" placeholder="tu@correo.com" autocomplete="email"></div>
+            <div class="m-fld"><label class="m-lbl">Tu nombre</label><input class="m-inp" type="text" id="su-name" placeholder="Ej: Juan" autocomplete="name" onkeydown="AuthUI.onEnter(event,'signup')"></div>
+            <div class="m-fld"><label class="m-lbl">Correo</label><input class="m-inp" type="email" id="su-email" placeholder="tu@correo.com" autocomplete="email" onkeydown="AuthUI.onEnter(event,'signup')"></div>
             <div class="m-fld">
               <label class="m-lbl">Contraseña</label>
               <div class="pwd-wrap">
-                <input class="m-inp" type="password" id="su-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                <input class="m-inp" type="password" id="su-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password" onkeydown="AuthUI.onEnter(event,'signup')">
                 <button type="button" class="pwd-eye" onclick="AuthUI.toggleEye('su-pass',this)">${eyeOpen}</button>
               </div>
             </div>
             <div class="m-fld">
               <label class="m-lbl">Confirmar contraseña</label>
               <div class="pwd-wrap">
-                <input class="m-inp" type="password" id="su-pass2" placeholder="Repite la contraseña" autocomplete="new-password">
+                <input class="m-inp" type="password" id="su-pass2" placeholder="Repite la contraseña" autocomplete="new-password" onkeydown="AuthUI.onEnter(event,'signup')">
                 <button type="button" class="pwd-eye" onclick="AuthUI.toggleEye('su-pass2',this)">${eyeOpen}</button>
               </div>
             </div>
@@ -63,6 +64,12 @@ const AuthUI = (() => {
           </div>
         </div>
       </div>`;
+  }
+
+  function onEnter(e, form) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (form === 'login') login(); else signup();
   }
 
   function switchTab(t) {
@@ -97,13 +104,14 @@ const AuthUI = (() => {
 
   async function signup() {
     showErr('su-err', '');
+    const name = document.getElementById('su-name').value.trim();
     const email = document.getElementById('su-email').value.trim();
     const password = document.getElementById('su-pass').value;
     const password2 = document.getElementById('su-pass2').value;
-    if (!email || !password || !password2) { showErr('su-err', 'Completa todos los campos.'); return; }
+    if (!name || !email || !password || !password2) { showErr('su-err', 'Completa todos los campos.'); return; }
     if (password.length < 6) { showErr('su-err', 'La contraseña debe tener al menos 6 caracteres.'); return; }
     if (password !== password2) { showErr('su-err', 'Las contraseñas no coinciden.'); return; }
-    const { error } = await sb.auth.signUp({ email, password });
+    const { error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name } } });
     if (error) { showErr('su-err', error.message); return; }
     document.getElementById('auth-form-signup').style.display = 'none';
     document.getElementById('auth-confirm').style.display = 'block';
@@ -121,5 +129,5 @@ const AuthUI = (() => {
     render();
   }
 
-  return { init, switchTab, login, signup, forgotPass, toggleEye };
+  return { init, switchTab, login, signup, forgotPass, toggleEye, onEnter };
 })();
