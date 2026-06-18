@@ -1,7 +1,5 @@
-# Presupuesta
+# Bienvenido a Presupuesta
 
-Gestor de presupuesto personal con sincronización en la nube vía Supabase.
+Presupuesta es un software de codigo abierto que gestiona tu Presupuesto Personal con sincronización en la nube vía Supabase. Todos tus datos están encriptados.
 
-## Esta carpeta es lo único que necesitas subir a GitHub
-
-Todo aquí es HTML/JS estático — no requiere servidor, Node, ni build. GitHub Pages lo sirve directamente.
+Proyecto personal vía Dariel Restituyo.
