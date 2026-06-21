@@ -127,14 +127,17 @@ const Data = (() => {
   async function getResumen() {
     const periodos = await listPeriodos();
     const top = periodos.slice(0, 15);
-    const out = [];
-    for (const p of top) {
-      const gastos = await listGastos(p.id);
+    if (!top.length) return [];
+    const ids = top.map(p => p.id);
+    // Una sola consulta para los gastos de todos los períodos del historial,
+    // en vez de una consulta por período (evita N+1 llamadas a Supabase).
+    const { data: gastos, error } = await sb.from('gastos').select('periodo_id,tipo,monto').eq('user_id', uid).in('periodo_id', ids);
+    if (error) throw error;
+    return top.map(p => {
       const t = { necesidad: 0, libre: 0, ahorro: 0 };
-      gastos.forEach(g => { t[g.tipo] = (t[g.tipo] || 0) + Number(g.monto); });
-      out.push({ ...p, totales: t });
-    }
-    return out;
+      (gastos || []).filter(g => g.periodo_id === p.id).forEach(g => { t[g.tipo] = (t[g.tipo] || 0) + Number(g.monto); });
+      return { ...p, totales: t };
+    });
   }
 
   // ── SINCRONIZACIÓN: aplica un item encolado contra Supabase ──
@@ -161,11 +164,67 @@ const Data = (() => {
     }
   }
 
+  // ── CATEGORÍAS PERSONALIZADAS ──────────────────────────────
+  async function listCategorias() {
+    const { data, error } = await sb.from('categorias').select('*').eq('user_id', uid).order('nombre');
+    if (error) throw error;
+    return data || [];
+  }
+  async function createCategoria(fields) {
+    const payload = { ...fields, user_id: uid };
+    const { data, error } = await sb.from('categorias').insert(payload).select().single();
+    if (error) throw error;
+    return data;
+  }
+  async function deleteCategoria(id) {
+    const { error } = await sb.from('categorias').delete().eq('id', id).eq('user_id', uid);
+    if (error) throw error;
+  }
+
+  // ── GASTOS RECURRENTES (plantillas) ────────────────────────
+  async function listRecurrentes() {
+    const { data, error } = await sb.from('gastos_recurrentes').select('*').eq('user_id', uid).eq('activo', true).order('nombre');
+    if (error) throw error;
+    return data || [];
+  }
+  async function createRecurrente(fields) {
+    const payload = { ...fields, user_id: uid };
+    const { data, error } = await sb.from('gastos_recurrentes').insert(payload).select().single();
+    if (error) throw error;
+    return data;
+  }
+  async function updateRecurrente(id, fields) {
+    const { data, error } = await sb.from('gastos_recurrentes').update(fields).eq('id', id).eq('user_id', uid).select().single();
+    if (error) throw error;
+    return data;
+  }
+  async function deleteRecurrente(id) {
+    const { error } = await sb.from('gastos_recurrentes').delete().eq('id', id).eq('user_id', uid);
+    if (error) throw error;
+  }
+
+  // ── BÚSQUEDA / FILTRO AVANZADO (todos los gastos del usuario) ─
+  async function searchGastos({ texto, desde, hasta, tipo, periodoId } = {}) {
+    let q = sb.from('gastos').select('*, periodos(label,fecha_inicio)').eq('user_id', uid);
+    if (texto) q = q.or(`nombre.ilike.%${texto}%,nota.ilike.%${texto}%`);
+    if (desde) q = q.gte('fecha', desde);
+    if (hasta) q = q.lte('fecha', hasta);
+    if (tipo) q = q.eq('tipo', tipo);
+    if (periodoId) q = q.eq('periodo_id', periodoId);
+    q = q.order('fecha', { ascending: false }).limit(200);
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  }
+
   return {
     setUser, getUser,
     getConfig, upsertConfig,
     listPeriodos, getPeriodo, createPeriodo, updatePeriodo, deletePeriodo, cerrarPeriodo,
     listGastos, createGasto, updateGasto, deleteGasto,
     getResumen, applyQueuedItem,
+    listCategorias, createCategoria, deleteCategoria,
+    listRecurrentes, createRecurrente, updateRecurrente, deleteRecurrente,
+    searchGastos,
   };
 })();
