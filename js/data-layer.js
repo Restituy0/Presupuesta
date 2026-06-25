@@ -176,6 +176,11 @@ const Data = (() => {
     if (error) throw error;
     return data;
   }
+  async function updateCategoria(id, fields) {
+    const { data, error } = await sb.from('categorias').update(fields).eq('id', id).eq('user_id', uid).select().single();
+    if (error) throw error;
+    return data;
+  }
   async function deleteCategoria(id) {
     const { error } = await sb.from('categorias').delete().eq('id', id).eq('user_id', uid);
     if (error) throw error;
@@ -204,13 +209,14 @@ const Data = (() => {
   }
 
   // ── BÚSQUEDA / FILTRO AVANZADO (todos los gastos del usuario) ─
-  async function searchGastos({ texto, desde, hasta, tipo, periodoId } = {}) {
+  async function searchGastos({ texto, desde, hasta, tipo, periodoId, categoriaId } = {}) {
     let q = sb.from('gastos').select('*, periodos(label,fecha_inicio)').eq('user_id', uid);
     if (texto) q = q.or(`nombre.ilike.%${texto}%,nota.ilike.%${texto}%`);
     if (desde) q = q.gte('fecha', desde);
     if (hasta) q = q.lte('fecha', hasta);
     if (tipo) q = q.eq('tipo', tipo);
     if (periodoId) q = q.eq('periodo_id', periodoId);
+    if (categoriaId) q = q.eq('categoria_id', categoriaId);
     q = q.order('fecha', { ascending: false }).limit(200);
     const { data, error } = await q;
     if (error) throw error;
@@ -223,7 +229,7 @@ const Data = (() => {
     listPeriodos, getPeriodo, createPeriodo, updatePeriodo, deletePeriodo, cerrarPeriodo,
     listGastos, createGasto, updateGasto, deleteGasto,
     getResumen, applyQueuedItem,
-    listCategorias, createCategoria, deleteCategoria,
+    listCategorias, createCategoria, updateCategoria, deleteCategoria,
     listRecurrentes, createRecurrente, updateRecurrente, deleteRecurrente,
     searchGastos,
   };

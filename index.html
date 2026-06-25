@@ -34,18 +34,6 @@
   --rad:10px;--rad2:16px;--rad3:22px;--rad4:28px;
   --nav-bg:rgba(244,245,249,.88);--ov-bg:rgba(60,64,80,.35);
 }
-[data-theme="midnight"]{
-  --bg:#05070d;--s1:#0a0d16;--s2:#10141f;--s3:#171c2a;--s4:#1e2436;--s5:#283047;
-  --b1:rgba(255,255,255,0.05);--b2:rgba(255,255,255,0.10);--b3:rgba(255,255,255,0.18);
-  --t1:#e4e8ff;--t2:#7680a3;--t3:#454e6d;
-  --g:#22e0a6;--g2:#16b886;--ga:rgba(34,224,166,0.09);--gb:rgba(34,224,166,0.2);
-  --v:#9aa3ff;--v2:#6f79e8;--va:rgba(154,163,255,0.09);--vb:rgba(154,163,255,0.2);
-  --a:#ffc640;--a2:#d9a012;--aa:rgba(255,198,64,0.09);--ab:rgba(255,198,64,0.2);
-  --r:#ff6b7a;--ra:rgba(255,107,122,0.09);--rb:rgba(255,107,122,0.22);
-  --f:'Inter',system-ui,sans-serif;--m:'JetBrains Mono',monospace;
-  --rad:10px;--rad2:16px;--rad3:22px;--rad4:28px;
-  --nav-bg:rgba(2,3,7,.92);--ov-bg:rgba(0,1,3,.85);
-}
 html{transition:background-color .25s ease}
 body{transition:background-color .25s ease,color .25s ease}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -146,6 +134,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .ov{display:none;position:fixed;inset:0;background:var(--ov-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:500;align-items:center;justify-content:center;padding:1rem}
 .ov.on{display:flex}
 .mbox{background:var(--s1);border:1px solid var(--b2);border-radius:var(--rad4);padding:1.75rem;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:mIn .22s cubic-bezier(.34,1.56,.64,1)}
+.mbox-scroll{max-height:calc(90vh - 3.5rem);overflow-y:auto;padding-right:10px;margin-right:-10px}
+.mbox-scroll::-webkit-scrollbar{width:5px}
+.mbox-scroll::-webkit-scrollbar-thumb{background:var(--s5);border-radius:3px}
 @keyframes mIn{from{opacity:0;transform:scale(.93) translateY(8px)}to{opacity:1;transform:none}}
 .m-ttl{font-size:17px;font-weight:800;letter-spacing:-.03em;margin-bottom:1.25rem}
 .m-body{display:flex;flex-direction:column;gap:13px}
@@ -165,14 +156,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .btn-ico{padding:8px 10px}
 
 /* CUSTOM SELECT */
-.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .theme-opt{background:var(--s2);border:1.5px solid var(--b2);border-radius:var(--rad2);padding:10px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;transition:all .15s;color:var(--t2);font-size:11px;font-weight:600}
 .theme-opt:hover{border-color:var(--b3)}
 .theme-opt.on{border-color:var(--v);color:var(--t1);background:var(--va)}
 .theme-swatch{width:100%;height:36px;border-radius:8px;display:block;border:1px solid rgba(128,128,128,.2)}
 .theme-swatch-dark{background:linear-gradient(135deg,#0c0f1a 50%,#181d2e 50%)}
 .theme-swatch-light{background:linear-gradient(135deg,#f4f5f9 50%,#ffffff 50%)}
-.theme-swatch-midnight{background:linear-gradient(135deg,#05070d 50%,#10141f 50%)}
 
 .csel{position:relative;user-select:none}
 .csel-trg{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--s2);border:1px solid var(--b2);border-radius:var(--rad);padding:10px 12px;cursor:pointer;font-family:var(--f);font-size:14px;font-weight:500;color:var(--t1);transition:all .15s;text-align:left}
@@ -307,10 +297,21 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .tab.on.ta{color:var(--a);border-bottom-color:var(--a)}
 .tc{font-size:9px;font-family:var(--m);padding:2px 5px;border-radius:8px;background:var(--s3);font-weight:600}
 .glist{min-height:60px}
-.grow{border-bottom:1px solid var(--b1);transition:background .1s}
+.grow{border-bottom:1px solid var(--b1);transition:background .12s,box-shadow .12s}
 .grow:last-child{border-bottom:none;border-radius:0 0 var(--rad3) var(--rad3)}
-.grow:hover{background:var(--s2)}
-.grow-main{display:grid;grid-template-columns:1fr 115px 120px 28px 28px;gap:6px;padding:8px 1.1rem;align-items:start}
+.grow:hover{background:var(--s2);box-shadow:inset 2px 0 0 var(--v)}
+.grow:hover .gi,.grow:hover .gsel-wrap .csel-trg{background:var(--s3)}
+.grow-main{
+  display:grid;
+  grid-template-columns:1fr 115px 120px 28px 28px;
+  grid-template-areas:"name amt cat note del";
+  gap:6px;padding:8px 1.1rem;align-items:start;
+}
+.grow-main .gi-stack{grid-area:name}
+.grow-main .g-amt-col{grid-area:amt}
+.grow-main .g-tipo-col{grid-area:cat}
+.grow-main .gnote{grid-area:note}
+.grow-main .gdel{grid-area:del}
 .grow-main>.gi.g-amt-col,.grow-main>.gsel-wrap{margin-top:0}
 .grow-main>.gnote,.grow-main>.gdel{margin-top:4px}
 .grow-date{font-size:10px;color:var(--t3);font-family:var(--m);flex:1}
@@ -336,11 +337,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .gdel svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
 .gdel:hover{background:var(--ra);color:var(--r)}
 .gnote{background:transparent;border:none;color:var(--t3);cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.gnote-chevron{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.gnote.open .gnote-chevron{transform:rotate(180deg)}
 .gnote svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .gnote:hover{background:var(--vb);color:var(--v)}
 .gnote.has-note{color:var(--v)}
 .gnote.has-note svg{fill:var(--va)}
-.g-note-preview{color:var(--t2);font-size:12px;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;max-width:auto;flex-shrink:1;min-width:0}
+.g-note-preview{color:var(--t2);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;max-width:auto;flex-shrink:1;min-width:0;font-size:12px}
 .g-tag-chip{font-size:10px;font-weight:600;color:var(--v);background:var(--va);border:1px solid var(--vb);border-radius:9px;padding:1px 7px;cursor:pointer;flex-shrink:0;transition:all .15s;white-space:nowrap}
 .g-tag-chip:hover{background:var(--vb)}
 .grow-note{display:none;padding:0 1.1rem 9px}
@@ -374,10 +377,29 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .recur-del{background:transparent;border:none;color:var(--t3);cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .recur-del:hover{background:var(--ra);color:var(--r)}
 .recur-empty{text-align:center;padding:1rem;color:var(--t3);font-size:12px}
+.tags-manage-list{display:flex;flex-direction:column;gap:7px}
+.tag-manage-item{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--rad2);padding:9px 11px}
+.tag-manage-name{flex:1;font-size:13px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.tag-manage-edit{background:transparent;border:none;color:var(--t3);cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.tag-manage-edit:hover{background:var(--vb);color:var(--v)}
+.tag-manage-del{background:transparent;border:none;color:var(--t3);cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.tag-manage-del:hover{background:var(--ra);color:var(--r)}
+.tags-manage-empty{text-align:center;padding:1.5rem 1rem;color:var(--t3);font-size:12px;line-height:1.7}
 .gempty{text-align:center;padding:2.5rem 1rem;color:var(--t3);font-size:13px;line-height:2}
 .gempty-btn{margin-top:10px}
-@media(max-width:560px){.grow-main{grid-template-columns:1fr 95px 26px 26px}.g-tipo-col{display:none}}
-@media(max-width:340px){.grow-main{grid-template-columns:1fr 26px 26px}.g-amt-col{display:none}}
+@media(max-width:560px){
+  .grow-main{
+    grid-template-columns:1fr 95px 26px 26px;
+    grid-template-areas:
+      "name amt note del"
+      "cat  cat  cat  cat";
+  }
+  .grow-main .g-tipo-col{margin-top:4px;max-width:220px}
+}
+@media(max-width:340px){
+  .grow-main{grid-template-columns:1fr 26px 26px;grid-template-areas:"name note del" "amt amt amt" "cat cat cat";}
+  .grow-main .g-amt-col{margin-top:4px}
+}
 
 /* HISTORY */
 .hist{display:flex;flex-direction:column;gap:7px}
@@ -544,8 +566,9 @@ try{
 
 <!-- MODAL CFG -->
 <div class="ov" id="ov-cfg">
-  <div class="mbox" style="max-width:480px;max-height:90vh;overflow-y:auto">
+  <div class="mbox" style="max-width:480px">
     <div class="m-ttl">Configuración</div>
+    <div class="mbox-scroll">
     <div class="m-body">
       <div class="m-fld">
         <label class="m-lbl">Tema</label>
@@ -557,10 +580,6 @@ try{
           <button class="theme-opt" id="theme-light" onclick="setTheme('light')">
             <span class="theme-swatch theme-swatch-light"></span>
             <span>Claro</span>
-          </button>
-          <button class="theme-opt" id="theme-midnight" onclick="setTheme('midnight')">
-            <span class="theme-swatch theme-swatch-midnight"></span>
-            <span>Medianoche</span>
           </button>
         </div>
       </div>
@@ -646,6 +665,14 @@ try{
       </div>
       <div class="m-sep"></div>
       <div class="m-fld">
+        <label class="m-lbl">Mis etiquetas</label>
+        <button class="btn btn-gh" style="width:100%;justify-content:center" onclick="closeOv('ov-cfg');abrirGestionEtiquetas()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          Editar o eliminar etiquetas
+        </button>
+      </div>
+      <div class="m-sep"></div>
+      <div class="m-fld">
         <label class="m-lbl">Mis datos</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-gh" style="flex:1" onclick="exportarCSV()">
@@ -659,14 +686,16 @@ try{
         </div>
       </div>
     </div>
+    </div>
     <div class="m-acts"><button class="btn btn-gh" onclick="closeOv('ov-cfg')">Cerrar</button><button class="btn btn-g" onclick="saveCfg()">Guardar y aplicar</button></div>
   </div>
 </div>
 
 <!-- MODAL PERÍODO -->
 <div class="ov" id="ov-per">
-  <div class="mbox" style="max-width:440px;max-height:90vh;overflow-y:auto">
+  <div class="mbox" style="max-width:440px">
     <div class="m-ttl" id="mper-ttl">Nuevo período</div>
+    <div class="mbox-scroll">
     <div class="m-body">
       <div class="m-fld" id="mper-tipo-fld">
         <label class="m-lbl">Tipo</label>
@@ -691,6 +720,7 @@ try{
       </div>
       <div class="m-fld" id="mper-ing-fld"><label class="m-lbl" id="mper-ing-lbl">Sueldo / Ingreso (RD$)</label><input class="m-inp" type="number" id="mper-ing" placeholder="0" min="0" step="1" inputmode="decimal"></div>
       <div class="m-fld"><label class="m-lbl" id="mper-sal-lbl">Saldo anterior (RD$)</label><input class="m-inp" type="number" id="mper-sal" placeholder="0" min="0" step="1" inputmode="decimal"></div>
+    </div>
     </div>
     <div class="m-acts"><button class="btn btn-gh" id="mper-cancel">Cancelar</button><button class="btn btn-g" id="mper-ok">Crear período</button></div>
   </div>
@@ -721,8 +751,9 @@ try{
 
 <!-- MODAL PERFIL -->
 <div class="ov" id="ov-perfil">
-  <div class="mbox" style="max-width:400px;max-height:88vh;overflow-y:auto">
+  <div class="mbox" style="max-width:400px">
     <div class="m-ttl">Mi perfil</div>
+    <div class="mbox-scroll">
     <div class="m-body">
       <div class="m-fld">
         <label class="m-lbl">Nombre</label>
@@ -766,6 +797,7 @@ try{
     <div style="margin-top:1rem">
       <div class="m-lbl" style="color:var(--r);margin-bottom:8px">Zona de peligro</div>
       <button class="btn btn-r" style="width:100%;justify-content:center" onclick="closeOv('ov-perfil');$('del-cuenta-confirm').value='';$('del-cuenta-err').textContent='';openOv('ov-del-cuenta')">Eliminar mi cuenta</button>
+    </div>
     </div>
   </div>
 </div>
@@ -817,10 +849,41 @@ try{
   </div>
 </div>
 
+<!-- MODAL GESTIONAR ETIQUETAS -->
+<div class="ov" id="ov-gestion-etiquetas">
+  <div class="mbox" style="max-width:420px">
+    <div class="m-ttl">Mis etiquetas</div>
+    <div class="mbox-scroll">
+    <p style="font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:1rem">Toca el lápiz para renombrar o cambiar el ícono. La papelera elimina la etiqueta de todos los gastos que la usaban (sin borrar los gastos).</p>
+    <div id="gestion-etiquetas-list" class="tags-manage-list"></div>
+    </div>
+    <div class="m-acts"><button class="btn btn-gh" onclick="closeOv('ov-gestion-etiquetas')">Cerrar</button><button class="btn btn-g" onclick="closeOv('ov-gestion-etiquetas');abrirNuevaCategoria(null)">＋ Nueva etiqueta</button></div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR ETIQUETA -->
+<div class="ov" id="ov-editar-etiqueta">
+  <div class="mbox" style="max-width:360px">
+    <div class="m-ttl">Editar etiqueta</div>
+    <div class="m-body">
+      <div class="m-fld">
+        <label class="m-lbl">Nombre</label>
+        <input class="m-inp" type="text" id="editcat-nombre" placeholder="Nombre de la etiqueta" maxlength="30">
+      </div>
+      <div class="m-fld">
+        <label class="m-lbl">Ícono</label>
+        <div class="emoji-grid" id="editcat-emojis"></div>
+      </div>
+    </div>
+    <div class="m-acts"><button class="btn btn-gh" onclick="editandoCatId=null;closeOv('ov-editar-etiqueta');openOv('ov-gestion-etiquetas')">Cancelar</button><button class="btn btn-g" onclick="guardarEdicionCategoria()">Guardar cambios</button></div>
+  </div>
+</div>
+
 <!-- MODAL BUSCAR GASTOS -->
 <div class="ov" id="ov-buscar">
-  <div class="mbox" style="max-width:520px;max-height:88vh;overflow-y:auto">
+  <div class="mbox" style="max-width:520px">
     <div class="m-ttl">Buscar gastos</div>
+    <div class="mbox-scroll">
     <div class="m-body">
       <div class="m-fld">
         <label class="m-lbl">Texto (nombre o detalle)</label>
@@ -848,7 +911,17 @@ try{
           </div>
         </div>
       </div>
+      <div class="m-fld">
+        <label class="m-lbl">Etiqueta</label>
+        <div class="csel" id="cs-buscar-etiqueta">
+          <button class="csel-trg" type="button"><span class="csel-val">Cualquiera</span><svg class="csel-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="csel-list">
+            <div class="csel-opt sel" data-value="">Cualquiera</div>
+          </div>
+        </div>
+      </div>
       <div id="buscar-resultados" class="search-results"></div>
+    </div>
     </div>
     <div class="m-acts"><button class="btn btn-gh" onclick="closeOv('ov-buscar')">Cerrar</button></div>
   </div>
@@ -856,8 +929,9 @@ try{
 
 <!-- MODAL GASTOS RECURRENTES -->
 <div class="ov" id="ov-recurrentes">
-  <div class="mbox" style="max-width:480px;max-height:88vh;overflow-y:auto">
+  <div class="mbox" style="max-width:480px">
     <div class="m-ttl">Gastos recurrentes</div>
+    <div class="mbox-scroll">
     <p style="font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:1rem">Plantillas que se agregan con un clic a cualquier período — ideal para renta, servicios o suscripciones que pagas siempre.</p>
     <div id="recurrentes-list" class="recur-list"></div>
     <div class="m-sep"></div>
@@ -880,6 +954,7 @@ try{
           </div>
         </div>
       </div>
+    </div>
     </div>
     <div class="m-acts"><button class="btn btn-gh" onclick="closeOv('ov-recurrentes')">Cerrar</button><button class="btn btn-g" onclick="guardarRecurrente()">＋ Agregar plantilla</button></div>
   </div>
@@ -1093,27 +1168,46 @@ function rtConnect(uid){
     .on('postgres_changes',{event:'*',schema:'public',table:'periodos',filter:`user_id=eq.${uid}`},payload=>rtMsg('periodos',payload))
     .subscribe(status=>setLed(status==='SUBSCRIBED'));
 }
+function isEditingGastos(){
+  // Verdadero si el usuario está interactuando con CUALQUIER fila de gastos
+  // en este momento: escribiendo, con el ajustador de monto abierto, con el
+  // panel de nota/etiqueta abierto, o reteniendo un botón +/-. Mientras esto
+  // sea cierto, evitamos re-renderizar la lista para no perder el foco ni
+  // cortar una acción a mitad de camino.
+  if(S.adjId)return true;
+  if(adjHoldInt||adjHoldTimer)return true;
+  const active=document.activeElement;
+  if(active&&active.closest('#glist'))return true;
+  if(document.querySelector('.grow-note.on'))return true;
+  if(document.querySelector('#glist .csel.open'))return true;
+  return false;
+}
+let pendingGRefresh=false;
+function renderGDeferred(){
+  // Si el usuario está editando, posponemos el refresco visual de la lista
+  // completa y lo intentamos de nuevo poco después, en vez de interrumpir.
+  if(isEditingGastos()){
+    pendingGRefresh=true;
+    setTimeout(()=>{ if(pendingGRefresh){ pendingGRefresh=false; if(!isEditingGastos())renderG(); else renderGDeferred(); } },1200);
+    return;
+  }
+  renderG();
+}
 function rtMsg(table,payload){
   const {eventType,new:nw,old:od}=payload;
   if(table==='gastos'){
     if(eventType==='INSERT'&&nw.periodo_id===S.pid){
-      if(!S.gastos.find(g=>g.id===nw.id)){S.gastos.push(nw);renderG();calc()}
+      if(!S.gastos.find(g=>g.id===nw.id)){S.gastos.push(nw);renderGDeferred();calc()}
     }else if(eventType==='UPDATE'&&nw.periodo_id===S.pid){
-      // Si el usuario tiene esta fila activa (ajustando monto o escribiendo nota),
-      // no la re-renderices: solo actualiza el dato en memoria para no perder el foco
-      // ni destruir el panel de ajuste que está abierto.
       const i=S.gastos.findIndex(g=>g.id===nw.id);
       if(i!==-1){
         S.gastos[i]=nw;
-        if(S.adjId===nw.id || document.activeElement?.closest(`#gr-${nw.id}`)){
-          calc(); // solo recalcula totales, no toca el DOM de la fila
-        }else{
-          renderG();calc();
-        }
+        calc(); // los totales sí deben reflejar el cambio aunque no se repinte la fila
+        renderGDeferred();
       }
     }else if(eventType==='DELETE'){
       const b=S.gastos.length;S.gastos=S.gastos.filter(g=>g.id!==od.id);
-      if(S.gastos.length!==b){renderG();calc()}
+      if(S.gastos.length!==b){renderGDeferred();calc()}
     }
   }else if(table==='periodos'){
     if(eventType==='UPDATE'&&nw.id===S.pid){
@@ -1221,7 +1315,7 @@ function initOnce(){
   domInitDone=true;
 
   // Wire modals close-on-overlay
-  ['ov-cfg','ov-per','ov-del','ov-close','ov-perfil','ov-del-cuenta','ov-fecha-gasto','ov-nueva-cat','ov-buscar','ov-recurrentes'].forEach(id=>{
+  ['ov-cfg','ov-per','ov-del','ov-close','ov-perfil','ov-del-cuenta','ov-fecha-gasto','ov-nueva-cat','ov-buscar','ov-recurrentes','ov-gestion-etiquetas','ov-editar-etiqueta'].forEach(id=>{
     $(id)?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv(id)});
   });
   $('mper-cancel').onclick=()=>closeOv('ov-per');
@@ -1243,6 +1337,7 @@ function initOnce(){
   });
   initCsel('cs-per',(val)=>loadPer(val));
   initCsel('cs-buscar-tipo',()=>ejecutarBusqueda());
+  initCsel('cs-buscar-etiqueta',()=>ejecutarBusqueda());
   initCsel('cs-rec-tipo',()=>{});
 
   $('din-ini')?.addEventListener('change',()=>{
@@ -1312,8 +1407,9 @@ function updateConnBadge(online){
 // TEMA
 // ═══════════════════════════════════════════════
 function applyTheme(theme){
+  if(theme==='midnight')theme='dark'; // migración: quien tenía medianoche guardada cae a oscuro
   document.documentElement.setAttribute('data-theme',theme||'dark');
-  ['dark','light','midnight'].forEach(t=>{
+  ['dark','light'].forEach(t=>{
     $(`theme-${t}`)?.classList.toggle('on',t===theme);
   });
   try{ localStorage.setItem('presupuesta_theme',theme); }catch(e){}
@@ -1822,8 +1918,8 @@ function renderG(){
             <div class="csel-opt${g.tipo==='ahorro'?' sel':''}" data-value="ahorro">◎ Ahorro</div>
           </div>
         </div>
-        <button class="gnote${g.nota?' has-note':''}" onclick="toggleNota(${g.id})" title="Agregar nota">
-          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <button class="gnote${g.nota||g.categoria_id?' has-note':''}" id="gnotebtn-${g.id}" onclick="toggleNota(${g.id})" title="Ver/editar detalles (etiqueta y nota)">
+          <svg class="gnote-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <button class="gdel" onclick="rmG(${g.id})" title="Eliminar"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
@@ -1916,6 +2012,93 @@ async function guardarNuevaCategoria(){
 }
 
 // ═══════════════════════════════════════════════
+// GESTIÓN DE ETIQUETAS (editar / eliminar)
+// ═══════════════════════════════════════════════
+function abrirGestionEtiquetas(){
+  renderGestionEtiquetas();
+  openOv('ov-gestion-etiquetas');
+}
+function renderGestionEtiquetas(){
+  const el=$('gestion-etiquetas-list');
+  if(!S.categorias.length){
+    el.innerHTML='<div class="tags-manage-empty">Aún no tienes etiquetas propias.<br>Crea la primera con el botón de abajo.</div>';
+    return;
+  }
+  el.innerHTML=S.categorias.map(c=>`
+    <div class="tag-manage-item">
+      <span class="tag-manage-name">${c.icono||'🏷️'} ${esc(c.nombre)}</span>
+      <button class="tag-manage-edit" onclick="editarCategoria(${c.id})" title="Renombrar / cambiar ícono">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      <button class="tag-manage-del" onclick="eliminarCategoria(${c.id})" title="Eliminar etiqueta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>`).join('');
+}
+let editandoCatId=null;
+function editarCategoria(id){
+  const cat=S.categorias.find(c=>c.id===id);if(!cat)return;
+  editandoCatId=id;
+  $('editcat-nombre').value=cat.nombre;
+  const idx=Math.max(0,EMOJI_OPTS.indexOf(cat.icono));
+  $('editcat-emojis').innerHTML=EMOJI_OPTS.map((e,i)=>`<button class="emoji-opt${i===idx?' sel':''}" data-e="${e}" onclick="selectEmoji(this)">${e}</button>`).join('');
+  closeOv('ov-gestion-etiquetas');
+  openOv('ov-editar-etiqueta');
+}
+async function guardarEdicionCategoria(){
+  if(!editandoCatId)return;
+  const nombre=$('editcat-nombre').value.trim();
+  if(!nombre){ toast('El nombre no puede estar vacío','warn'); return; }
+  const emojiBtn=document.querySelector('#editcat-emojis .emoji-opt.sel');
+  const icono=emojiBtn?emojiBtn.dataset.e:'🏷️';
+  try{
+    await Data.updateCategoria(editandoCatId,{nombre,icono});
+    const i=S.categorias.findIndex(c=>c.id===editandoCatId);
+    if(i!==-1){ S.categorias[i]={...S.categorias[i],nombre,icono}; }
+    closeOv('ov-editar-etiqueta');
+    openOv('ov-gestion-etiquetas');
+    renderGestionEtiquetas();
+    renderG(); // refresca los chips visibles en la lista de gastos
+    toast('✓ Etiqueta actualizada');
+  }catch(e){
+    toast('No se pudo guardar: '+e.message,'bad');
+  }
+}
+async function eliminarCategoria(id){
+  const backup=S.categorias.find(c=>c.id===id);
+  if(!backup)return;
+  try{
+    await Data.deleteCategoria(id);
+    S.categorias=S.categorias.filter(c=>c.id!==id);
+    // Los gastos que usaban esta etiqueta quedan sin etiqueta (la BD ya
+    // pone categoria_id en null vía "on delete set null"); reflejamos
+    // eso también en memoria para que se vea correcto sin recargar.
+    const afectados=S.gastos.filter(g=>g.categoria_id===id).map(g=>g.id);
+    S.gastos.forEach(g=>{ if(g.categoria_id===id) g.categoria_id=null; });
+    renderGestionEtiquetas();
+    renderG();
+    toast(`Etiqueta "${backup.nombre}" eliminada`,'ok',5000,{
+      label:'Deshacer',
+      fn: async()=>{
+        try{
+          const restored=await Data.createCategoria({nombre:backup.nombre,icono:backup.icono,tipo_base:backup.tipo_base||'necesidad'});
+          S.categorias.push(restored);
+          // Reasignamos la etiqueta a los gastos que la tenían antes de eliminarla
+          for(const gid of afectados){
+            await Data.updateGasto(gid,{categoria_id:restored.id}).catch(()=>{});
+            const g=S.gastos.find(g=>g.id===gid); if(g) g.categoria_id=restored.id;
+          }
+          renderGestionEtiquetas();renderG();
+          toast('Etiqueta restaurada');
+        }catch(e){ toast('No se pudo deshacer: '+e.message,'bad'); }
+      }
+    });
+  }catch(e){
+    toast('No se pudo eliminar: '+e.message,'bad');
+  }
+}
+
+// ═══════════════════════════════════════════════
 // BÚSQUEDA / FILTROS
 // ═══════════════════════════════════════════════
 let buscarDebounce=null;
@@ -1925,7 +2108,12 @@ function abrirBuscar(){
     const g=$(id);g.querySelectorAll('.date-part').forEach(p=>p.value='');
   });
   selects['cs-buscar-tipo']?.setValue('');
-  $('buscar-resultados').innerHTML='<div class="sr-empty">Escribe, elige fechas o un tipo para buscar.</div>';
+  // Las etiquetas se crean libremente, así que repoblamos las opciones cada vez
+  selects['cs-buscar-etiqueta']?.setOptions([
+    {v:'',l:'Cualquiera'},
+    ...S.categorias.map(c=>({v:String(c.id),l:`${c.icono||'🏷️'} ${c.nombre}`}))
+  ]);
+  $('buscar-resultados').innerHTML='<div class="sr-empty">Escribe, elige fechas, tipo o etiqueta para buscar.</div>';
   openOv('ov-buscar');
 }
 function ejecutarBusqueda(){
@@ -1935,12 +2123,14 @@ function ejecutarBusqueda(){
     const desde=dateGrpToIso('buscar-desde');
     const hasta=dateGrpToIso('buscar-hasta');
     const tipo=selects['cs-buscar-tipo']?.getValue()||'';
-    if(!texto&&!desde&&!hasta&&!tipo){
-      $('buscar-resultados').innerHTML='<div class="sr-empty">Escribe, elige fechas o un tipo para buscar.</div>';
+    const etiquetaVal=selects['cs-buscar-etiqueta']?.getValue()||'';
+    const categoriaId=etiquetaVal?parseInt(etiquetaVal):null;
+    if(!texto&&!desde&&!hasta&&!tipo&&!categoriaId){
+      $('buscar-resultados').innerHTML='<div class="sr-empty">Escribe, elige fechas, tipo o etiqueta para buscar.</div>';
       return;
     }
     try{
-      const res=await Data.searchGastos({texto,desde,hasta,tipo});
+      const res=await Data.searchGastos({texto,desde,hasta,tipo,categoriaId});
       renderResultadosBusqueda(res);
     }catch(e){
       $('buscar-resultados').innerHTML=`<div class="sr-empty">Error al buscar: ${esc(e.message)}</div>`;
@@ -1950,16 +2140,20 @@ function ejecutarBusqueda(){
 function renderResultadosBusqueda(res){
   const el=$('buscar-resultados');
   if(!res.length){ el.innerHTML='<div class="sr-empty">Sin resultados para esos filtros.</div>'; return; }
-  const tipoIco={necesidad:'🏠',libre:'✦',ahorro:'◎'};
-  el.innerHTML=res.map(g=>`
+  const houseIco='<svg viewBox="0 0 24 24" style="width:12px;height:12px;display:inline;vertical-align:-1px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/></svg>';
+  const tipoIco={necesidad:houseIco,libre:'✦',ahorro:'◎'};
+  el.innerHTML=res.map(g=>{
+    const cat=S.categorias.find(c=>c.id===g.categoria_id);
+    return `
     <div class="sr-item">
       <div class="sr-item-top">
         <span class="sr-item-name">${tipoIco[g.tipo]||''} ${esc(g.nombre||'(sin nombre)')}</span>
         <span class="sr-item-amt">${x(g.monto)}</span>
       </div>
-      <div class="sr-item-meta">${g.fecha} · ${esc(g.periodos?.label||'período eliminado')}</div>
+      <div class="sr-item-meta">${g.fecha} · ${esc(g.periodos?.label||'período eliminado')}${cat?` · ${cat.icono||'🏷️'} ${esc(cat.nombre)}`:''}</div>
       ${g.nota?`<div class="sr-item-nota">"${esc(g.nota)}"</div>`:''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════
@@ -1973,7 +2167,8 @@ function abrirRecurrentes(){
 function renderRecurrentesList(){
   const el=$('recurrentes-list');
   if(!S.recurrentes.length){ el.innerHTML='<div class="recur-empty">Aún no tienes plantillas. Crea una abajo.</div>'; return; }
-  const tipoIco={necesidad:'🏠',libre:'✦',ahorro:'◎'};
+  const houseIco='<svg viewBox="0 0 24 24" style="width:12px;height:12px;display:inline;vertical-align:-1px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/></svg>';
+  const tipoIco={necesidad:houseIco,libre:'✦',ahorro:'◎'};
   el.innerHTML=S.recurrentes.map(r=>`
     <div class="recur-item">
       <span class="recur-name">${tipoIco[r.tipo]||''} ${esc(r.nombre)}</span>
@@ -2030,6 +2225,11 @@ function guardarFechaGasto(){
 function toggleNota(id){
   const el=$(`note-${id}`);if(!el)return;
   const isOn=el.classList.toggle('on');
+  const btn=$(`gnotebtn-${id}`);
+  if(btn){
+    btn.classList.toggle('open',isOn);
+    btn.title=isOn?'Ocultar detalles':'Ver/editar detalles (etiqueta y nota)';
+  }
   if(isOn){
     const inp=el.querySelector('.note-inp');
     setTimeout(()=>inp?.focus(),50);
