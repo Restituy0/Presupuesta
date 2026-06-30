@@ -1,22 +1,32 @@
 // ═══════════════════════════════════════════════════════════════
 // COLA OFFLINE — Guarda cambios cuando no hay internet y los
 // sincroniza automáticamente al reconectar.
+//
+// Además mantiene una CACHÉ LOCAL (object store separado) con la
+// última copia conocida de períodos, gastos, categorías y config,
+// para que la app pueda arrancar y mostrar datos incluso sin
+// conexión desde el primer momento, no solo cuando se pierde la
+// conexión a mitad de uso.
 // ═══════════════════════════════════════════════════════════════
 
 const OfflineQueue = (() => {
   const DB_NAME = 'presupuesta-offline';
   const STORE = 'pending';
+  const CACHE_STORE = 'cache';
   let db = null;
   let syncing = false;
   const listeners = [];
 
   function openDB() {
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
+      const req = indexedDB.open(DB_NAME, 2);
       req.onupgradeneeded = () => {
         const d = req.result;
         if (!d.objectStoreNames.contains(STORE)) {
           d.createObjectStore(STORE, { keyPath: 'qid', autoIncrement: true });
+        }
+        if (!d.objectStoreNames.contains(CACHE_STORE)) {
+          d.createObjectStore(CACHE_STORE, { keyPath: 'key' });
         }
       };
       req.onsuccess = () => { db = req.result; resolve(db); };
@@ -89,5 +99,34 @@ const OfflineQueue = (() => {
     }
   }
 
-  return { enqueue, getAll, remove, count, onChange, flush, isSyncing: () => syncing };
+  // ── CACHÉ LOCAL (snapshot de datos para arranque offline) ──────────────
+  async function cacheSet(key, value) {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CACHE_STORE, 'readwrite');
+      const req = tx.objectStore(CACHE_STORE).put({ key, value, ts: Date.now() });
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  async function cacheGet(key) {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CACHE_STORE, 'readonly');
+      const req = tx.objectStore(CACHE_STORE).get(key);
+      req.onsuccess = () => resolve(req.result ? req.result.value : null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  async function cacheTimestamp(key) {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CACHE_STORE, 'readonly');
+      const req = tx.objectStore(CACHE_STORE).get(key);
+      req.onsuccess = () => resolve(req.result ? req.result.ts : null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  return { enqueue, getAll, remove, count, onChange, flush, isSyncing: () => syncing, cacheSet, cacheGet, cacheTimestamp };
 })();

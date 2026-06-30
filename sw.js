@@ -1,4 +1,4 @@
-const CACHE='presupuesta-v4';
+const CACHE='presupuesta-v5';
 const ASSETS=['./','./index.html','./manifest.json','./icons/icon.svg',
   './js/supabase-client.js','./js/offline-queue.js','./js/data-layer.js','./js/auth-ui.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting()});

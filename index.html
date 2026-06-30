@@ -1400,7 +1400,16 @@ function updateConnBadge(online){
   const dot=$('conn-dot'); const txt=$('conn-txt');
   if(!dot)return;
   dot.style.background=online?'var(--g)':'var(--a)';
-  if(txt) txt.textContent=online?'En línea':'Sin conexión — guardando localmente';
+  if(txt) txt.textContent=online?'En línea':'Sin conexión — mostrando datos guardados';
+  if(!online){
+    Data.cacheTimestamp('periodos').then(ts=>{
+      const sub=$('conn-pending-txt');
+      if(!sub||!ts)return;
+      const mins=Math.round((Date.now()-ts)/60000);
+      const when= mins<1?'hace un momento': mins<60?`hace ${mins} min`: `hace ${Math.round(mins/60)} h`;
+      sub.textContent=`Datos de ${when} — se actualizarán al reconectar`;
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -1491,6 +1500,12 @@ async function loadPer(id){
   S.pid=parseInt(id);
   selects['cs-per']?.setValue(String(id));
   const data=await Data.getPeriodo(S.pid);
+  if(!data){
+    toast('Este período no está disponible sin conexión','warn');
+    S.pid=null;S.per=null;S.gastos=[];
+    sv('per-sel-lbl','— Selecciona un período —');
+    return;
+  }
   S.per=data; S.gastos=await Data.listGastos(S.pid);
   syncForm();
   Data.upsertConfig({periodo_activo:S.pid});
@@ -1527,7 +1542,17 @@ function syncForm(){
 // MODAL HELPERS
 // ═══════════════════════════════════════════════
 function openOv(id){$(id).classList.add('on')}
-function closeOv(id){$(id).classList.remove('on')}
+function closeOv(id){
+  $(id).classList.remove('on');
+  if(id==='ov-cfg'){
+    // Sin importar cómo se cierre el modal (botón Cerrar, clic fuera, etc.),
+    // cualquier cambio pendiente en ingreso/saldo/distribución se guarda de
+    // inmediato — antes dependía de un debounce de 800ms que podía no llegar
+    // a ejecutarse si el usuario cerraba el modal justo después de cambiar algo.
+    clearTimeout(S.saveT);
+    doSave();
+  }
+}
 
 function openNuevo(){
   $('mper-ttl').textContent='Nuevo período';
@@ -1662,7 +1687,7 @@ async function doSave(){
   S.per={...S.per,...up};const i=S.pers.findIndex(p=>p.id===S.pid);if(i!==-1)S.pers[i]=S.per;
   renderHist();
 }
-function saveCfg(){doSave();closeOv('ov-cfg');toast('✓ Configuración guardada')}
+function saveCfg(){closeOv('ov-cfg');toast('✓ Configuración guardada')}
 
 // ═══════════════════════════════════════════════
 // SLIDERS
@@ -2358,9 +2383,15 @@ function renderTrend(res){
 // ═══════════════════════════════════════════════
 async function bootstrap(){
   try{
+    // getSession() lee primero del almacenamiento local (localStorage),
+    // así que funciona sin conexión si ya había una sesión guardada —
+    // no depende de una llamada de red para devolver el usuario.
     const { data:{ session } } = await sb.auth.getSession();
     if(session?.user){
       showApp(session.user);
+      if(!navigator.onLine){
+        toast('Sin conexión — mostrando tus últimos datos guardados','warn',4000);
+      }
     }else{
       showAuth();
     }
@@ -2370,7 +2401,7 @@ async function bootstrap(){
     });
   }catch(e){
     showAuth();
-    toast('No se pudo conectar. Revisa tu internet.','bad',5000);
+    if(navigator.onLine) toast('No se pudo conectar. Revisa tu internet.','bad',5000);
   }finally{
     $('boot-loading')?.remove();
   }
