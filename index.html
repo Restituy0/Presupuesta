@@ -287,6 +287,16 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .exp-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rad3)}
 .exp-hdr{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;border-bottom:1px solid var(--b1);gap:8px;flex-wrap:wrap;border-radius:var(--rad3) var(--rad3) 0 0}
 .exp-title{font-size:15px;font-weight:800;letter-spacing:-.02em}
+#glimit-toggle.on{color:var(--v);background:var(--va);border-color:var(--vb)}
+.glimit-bar{display:none;align-items:center;justify-content:space-between;gap:10px;padding:.7rem 1.1rem;border-bottom:1px solid var(--b1);background:var(--s2);flex-wrap:wrap}
+.glimit-bar.on{display:flex}
+.glimit-lbl{font-size:12px;color:var(--t2);font-weight:600}
+.glimit-ctrl{display:flex;align-items:center;gap:8px}
+.glimit-inp{width:64px;height:30px;padding:4px 8px;font-size:12.5px;font-family:var(--m);background:var(--s3);border:1px solid var(--b2);border-radius:var(--rad);color:var(--t1);outline:none;text-align:center;transition:border-color .15s}
+.glimit-inp:focus{border-color:var(--v)}
+.glimit-clear{font-size:11.5px;font-weight:600;color:var(--v);background:transparent;border:1px solid var(--vb);border-radius:var(--rad);padding:5px 10px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.glimit-clear:hover{background:var(--va)}
+.glimit-more{padding:10px 1.1rem;display:flex;justify-content:center;border-top:1px solid var(--b1)}
 .tabs{display:flex;border-bottom:1px solid var(--b1);overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{font-size:12px;font-weight:600;padding:9px 13px;background:transparent;border:none;color:var(--t3);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:5px;flex-shrink:0}
@@ -388,17 +398,37 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .gempty{text-align:center;padding:2.5rem 1rem;color:var(--t3);font-size:13px;line-height:2}
 .gempty-btn{margin-top:10px}
 @media(max-width:560px){
+  /* En móvil, el nombre ocupa toda la fila superior junto a nota/eliminar,
+     y monto + tipo comparten la fila de abajo a partes iguales (en vez de
+     columnas fijas en px que se comprimían y quedaban desordenadas). */
   .grow-main{
-    grid-template-columns:1fr 95px 26px 26px;
+    /*Backup*/
+    /*grid-template-columns:1fr 28px 28px;
+    grid-template-areas:
+      "name note del"
+      "amt  cat  cat";
+    row-gap:7px;*/
+    grid-template-columns:1fr 1fr 120px 28px 28px;
+  }
+  .grow-main .g-amt-col{width:100%}
+  .grow-main .g-tipo-col{max-width:none;width:100%}
+  .grow-main .g-amt-col,.grow-main .gsel-wrap{margin-top:0}
+  .grow-main .gnote,.grow-main .gdel{margin-top:0}
+}
+@media(max-width:400px){
+  .grow-main{
+    /* grid-template-columns:1fr 26px 26px;
+    grid-template-areas:
+      "name note del"
+      "amt  cat  cat";
+    gap:8px 6px; */
+    grid-template-columns:1fr 0.5fr 26px 26px;
     grid-template-areas:
       "name amt note del"
-      "cat  cat  cat  cat";
+      "cat cat cat cat";
+    gap:8px 6px;
   }
-  .grow-main .g-tipo-col{margin-top:4px;max-width:220px}
-}
-@media(max-width:340px){
-  .grow-main{grid-template-columns:1fr 26px 26px;grid-template-areas:"name note del" "amt amt amt" "cat cat cat";}
-  .grow-main .g-amt-col{margin-top:4px}
+  .g-date-row{flex-wrap:wrap}
 }
 
 /* HISTORY */
@@ -1082,9 +1112,19 @@ try{
           <button class="btn btn-gh btn-sm btn-ico" onclick="abrirRecurrentes()" title="Gastos recurrentes">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           </button>
+          <button class="btn btn-gh btn-sm btn-ico" id="glimit-toggle" onclick="toggleGLimit()" title="Mostrar/ocultar límite de gastos visibles">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+          </button>
           <button class="btn btn-g" id="btn-add" onclick="addGasto()" disabled>
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar
           </button>
+        </div>
+      </div>
+      <div class="glimit-bar" id="glimit-bar">
+        <span class="glimit-lbl">Límite de gastos a mostrar</span>
+        <div class="glimit-ctrl">
+          <input class="glimit-inp" type="number" id="glimit-inp" min="1" step="1" value="20" oninput="onGLimitInput(this.value)">
+          <button class="glimit-clear" onclick="setGLimit(null)" title="Mostrar todos">Mostrar todos</button>
         </div>
       </div>
       <div class="tabs">
@@ -1094,6 +1134,9 @@ try{
         <button class="tab ta" data-t="ahorro" onclick="setTab('ahorro')">◎ Ahorros <span class="tc" id="tc-aho">0</span></button>
       </div>
       <div class="glist" id="glist"></div>
+      <div class="glimit-more" id="glimit-more" style="display:none">
+        <button class="btn btn-gh btn-sm" id="glimit-more-btn" onclick="showMoreG()"></button>
+      </div>
     </div>
   </div>
 
@@ -1124,8 +1167,10 @@ const S = {
   pid:null, per:null, gastos:[], pers:[],
   tab:'all', pcts:{nec:60,lib:25,aho:15},
   moneda:'RD$', pais:'DO',
-  saveT:null, dragK:null, adding:false,
+  dragK:null, adding:false,
   adjId:null, categorias:[], recurrentes:[], distMode:'pct',
+  cfgSnap:null, cfgSaving:false,
+  gLimit:20, gLimitOn:true, gShowAll:false,
 };
 
 // ─ Formatting ─
@@ -1314,6 +1359,9 @@ function initOnce(){
   if(domInitDone)return;
   domInitDone=true;
 
+  loadGLimitPref();
+  syncGLimitUI();
+
   // Wire modals close-on-overlay
   ['ov-cfg','ov-per','ov-del','ov-close','ov-perfil','ov-del-cuenta','ov-fecha-gasto','ov-nueva-cat','ov-buscar','ov-recurrentes','ov-gestion-etiquetas','ov-editar-etiqueta'].forEach(id=>{
     $(id)?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv(id)});
@@ -1327,7 +1375,7 @@ function initOnce(){
     const sym=opt.dataset.sym||'$';
     S.moneda=sym; S.pais=val;
     updateSymbolDisplay();
-    Data.upsertConfig({moneda:sym,pais:val});
+    // Solo aplica en memoria/UI; se persiste al pulsar "Guardar y aplicar".
     updateLogoMark();
     calc();
   });
@@ -1424,8 +1472,8 @@ function applyTheme(theme){
   try{ localStorage.setItem('presupuesta_theme',theme); }catch(e){}
 }
 function setTheme(theme){
+  // Solo aplica visualmente; la persistencia ocurre al pulsar "Guardar y aplicar".
   applyTheme(theme);
-  Data.upsertConfig({tema:theme}).catch(()=>{});
 }
 
 function updateLogoMark(){
@@ -1541,16 +1589,17 @@ function syncForm(){
 // ═══════════════════════════════════════════════
 // MODAL HELPERS
 // ═══════════════════════════════════════════════
-function openOv(id){$(id).classList.add('on')}
+function openOv(id){
+  $(id).classList.add('on');
+  if(id==='ov-cfg') snapshotCfg();
+}
 function closeOv(id){
   $(id).classList.remove('on');
-  if(id==='ov-cfg'){
-    // Sin importar cómo se cierre el modal (botón Cerrar, clic fuera, etc.),
-    // cualquier cambio pendiente en ingreso/saldo/distribución se guarda de
-    // inmediato — antes dependía de un debounce de 800ms que podía no llegar
-    // a ejecutarse si el usuario cerraba el modal justo después de cambiar algo.
-    clearTimeout(S.saveT);
-    doSave();
+  if(id==='ov-cfg' && !S.cfgSaving){
+    // Si el modal se cierra sin pasar por "Guardar y aplicar" (botón Cerrar,
+    // clic fuera, Esc, etc.), descartamos cualquier cambio hecho en el modal
+    // y restauramos todo al estado que tenía antes de abrirlo.
+    restoreCfgSnapshot();
   }
 }
 
@@ -1677,9 +1726,35 @@ async function delPer(){
 // ═══════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════
-function onIng(){calc();schedSave();syncMontoView()}
-function onSal(){calc();schedSave();syncMontoView()}
-function schedSave(){clearTimeout(S.saveT);S.saveT=setTimeout(doSave,800)}
+// Los cambios hechos dentro del modal de Configuración ahora solo se aplican
+// en memoria/UI mientras el modal está abierto. Solo se persisten (BD +
+// tema/moneda) si el usuario pulsa "Guardar y aplicar". Si cierra de
+// cualquier otra forma, se revierte todo al snapshot tomado al abrir.
+function snapshotCfg(){
+  S.cfgSnap={
+    tema: document.documentElement.getAttribute('data-theme')||'dark',
+    moneda:S.moneda, pais:S.pais,
+    ing: $('ing').value, sal: $('sal').value,
+    pcts: {...S.pcts}, distMode:S.distMode,
+  };
+}
+function restoreCfgSnapshot(){
+  const snap=S.cfgSnap;
+  if(!snap)return;
+  applyTheme(snap.tema);
+  S.moneda=snap.moneda; S.pais=snap.pais;
+  selects['cs-pais']?.setValue(snap.pais);
+  updateSymbolDisplay(); updateLogoMark();
+  $('ing').value=snap.ing;
+  $('sal').value=snap.sal;
+  S.pcts={...snap.pcts};
+  setDistMode(snap.distMode);
+  updateSlUI();
+  calc();
+  S.cfgSnap=null;
+}
+function onIng(){calc();syncMontoView()}
+function onSal(){calc();syncMontoView()}
 async function doSave(){
   if(!S.pid||!S.per)return;
   const ing=parseFloat($('ing').value)||0, sal=parseFloat($('sal').value)||0;
@@ -1687,15 +1762,28 @@ async function doSave(){
   S.per={...S.per,...up};const i=S.pers.findIndex(p=>p.id===S.pid);if(i!==-1)S.pers[i]=S.per;
   renderHist();
 }
-function saveCfg(){closeOv('ov-cfg');toast('✓ Configuración guardada')}
+async function saveCfg(){
+  S.cfgSaving=true;
+  try{
+    // Persistimos tema, moneda/país y (si hay período activo) ingreso/saldo/distribución
+    // — todo junto, solo cuando el usuario confirma con este botón.
+    Data.upsertConfig({tema:document.documentElement.getAttribute('data-theme'), moneda:S.moneda, pais:S.pais}).catch(()=>{});
+    await doSave();
+    S.cfgSnap=null;
+    closeOv('ov-cfg');
+    toast('✓ Configuración guardada');
+  } finally {
+    S.cfgSaving=false;
+  }
+}
 
 // ═══════════════════════════════════════════════
 // SLIDERS
 // ═══════════════════════════════════════════════
 function tStart(e,k){e.preventDefault();S.dragK=k;tMove(e);window.addEventListener('mousemove',tMove);window.addEventListener('touchmove',tMove,{passive:false});window.addEventListener('mouseup',tEnd);window.addEventListener('touchend',tEnd)}
 function tMove(e){if(!S.dragK)return;e.preventDefault();const rect=$('tr-'+S.dragK).getBoundingClientRect();const cx=e.touches?e.touches[0].clientX:e.clientX;S.pcts[S.dragK]=Math.round(Math.max(0,Math.min(100,(cx-rect.left)/rect.width*100)));rebal(S.dragK);updateSlUI();calc()}
-function tEnd(){S.dragK=null;window.removeEventListener('mousemove',tMove);window.removeEventListener('touchmove',tMove);window.removeEventListener('mouseup',tEnd);window.removeEventListener('touchend',tEnd);schedSave()}
-function onPct(k,v){S.pcts[k]=Math.max(0,Math.min(100,parseInt(v)||0));rebal(k);updateSlUI();calc();schedSave()}
+function tEnd(){S.dragK=null;window.removeEventListener('mousemove',tMove);window.removeEventListener('touchmove',tMove);window.removeEventListener('mouseup',tEnd);window.removeEventListener('touchend',tEnd)}
+function onPct(k,v){S.pcts[k]=Math.max(0,Math.min(100,parseInt(v)||0));rebal(k);updateSlUI();calc()}
 function rebal(ch){const ot=['nec','lib','aho'].filter(k=>k!==ch);const diff=100-S.pcts[ch];const os=ot.reduce((a,k)=>a+S.pcts[k],0);if(os===0){S.pcts[ot[0]]=Math.floor(diff/2);S.pcts[ot[1]]=diff-Math.floor(diff/2)}else{let r=diff;ot.forEach((k,i)=>{const v=i===ot.length-1?r:Math.round(diff*S.pcts[k]/os);S.pcts[k]=Math.max(0,v);r-=S.pcts[k]})};['nec','lib','aho'].forEach(k=>S.pcts[k]=Math.max(0,S.pcts[k]))}
 function updateSlUI(){
   ['nec','lib','aho'].forEach(k=>{const v=S.pcts[k];$(`tf-${k}`).style.width=v+'%';$(`tt-${k}`).style.left=v+'%';$(`p${k}`).value=v});
@@ -1746,7 +1834,7 @@ function onMontoFijo(k,val){
     const inp=$(`m${kk}`);if(inp) inp.value=Math.round(total*S.pcts[kk]/100);
   });
   updateMontoSuma();
-  calc();schedSave();
+  calc();
 }
 
 // ═══════════════════════════════════════════════
@@ -1909,8 +1997,62 @@ function renderDonut(gN,gL,gA){
 // ═══════════════════════════════════════════════
 // TABS & GASTOS
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+// LÍMITE DE GASTOS VISIBLES EN LA TABLA
+// ═══════════════════════════════════════════════
+// Permite limitar cuántos gastos se muestran a la vez en la lista (útil en
+// móvil cuando un día/período tiene muchos gastos y hay que hacer mucho
+// scroll para llegar a las demás secciones). El control se guarda solo en
+// esta sesión (no en BD) y se puede mostrar/ocultar con el botón de la
+// barra de herramientas de la tabla.
+const GLIMIT_KEY='presupuesta_glimit';
+function loadGLimitPref(){
+  try{
+    const raw=localStorage.getItem(GLIMIT_KEY);
+    if(raw){
+      const p=JSON.parse(raw);
+      S.gLimit=p.limit ?? 20;
+      S.gLimitOn=!!p.on;
+    }
+  }catch(e){}
+}
+function saveGLimitPref(){
+  try{ localStorage.setItem(GLIMIT_KEY,JSON.stringify({limit:S.gLimit,on:S.gLimitOn})); }catch(e){}
+}
+function toggleGLimit(){
+  S.gLimitOn=!S.gLimitOn;
+  saveGLimitPref();
+  syncGLimitUI();
+  renderG();
+}
+function setGLimit(val){
+  // val=null → "Mostrar todos" en esta vista, sin desactivar la preferencia
+  S.gLimit = val===null ? null : Math.max(1,parseInt(val)||1);
+  S.gShowAll=false;
+  saveGLimitPref();
+  renderG();
+}
+function onGLimitInput(val){
+  const n=Math.max(1,parseInt(val)||1);
+  S.gLimit=n;
+  S.gShowAll=false;
+  saveGLimitPref();
+  renderG();
+}
+function showMoreG(){
+  S.gShowAll=true;
+  renderG();
+}
+function syncGLimitUI(){
+  $('glimit-toggle')?.classList.toggle('on',S.gLimitOn);
+  $('glimit-bar')?.classList.toggle('on',S.gLimitOn);
+  const inp=$('glimit-inp');
+  if(inp) inp.value = S.gLimit || 20;
+}
+
 function setTab(t){
   S.tab=t;
+  S.gShowAll=false;
   document.querySelectorAll('.tab').forEach(b=>{
     const bt=b.dataset.t;
     const cl=bt==='all'?'':bt==='necesidad'?' tg':bt==='libre'?' tv':' ta';
@@ -1920,8 +2062,15 @@ function setTab(t){
 }
 function renderG(){
   const el=$('glist');
-  const list=S.tab==='all'?S.gastos:S.gastos.filter(g=>g.tipo===S.tab);
-  if(!list.length){el.innerHTML=`<div class="gempty">Sin gastos aquí todavía.<br><button class="btn btn-g gempty-btn" onclick="addGasto()" ${!S.pid||S.per?.estado==='cerrado'?'disabled':''}><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar el primero</button></div>`;return}
+  const full=S.tab==='all'?S.gastos:S.gastos.filter(g=>g.tipo===S.tab);
+  syncGLimitUI();
+
+  // Aplicamos el límite de gastos visibles solo si el control está activo,
+  // hay un límite numérico válido y el usuario no pidió ver todos en esta vista.
+  const limitActive = S.gLimitOn && S.gLimit && !S.gShowAll && full.length>S.gLimit;
+  const list = limitActive ? full.slice(0,S.gLimit) : full;
+
+  if(!full.length){el.innerHTML=`<div class="gempty">Sin gastos aquí.<br>Pulsa <strong>＋ Agregar Gasto</strong> para registrar uno.<br><button class="btn btn-g gempty-btn" onclick="addGasto()" ${!S.pid||S.per?.estado==='cerrado'?'disabled':''}><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar Gasto</button></div>`;$('glimit-more').style.display='none';return}
   el.innerHTML=list.map(g=>`
     <div class="grow" id="gr-${g.id}">
       <div class="grow-main">
@@ -1980,6 +2129,16 @@ function renderG(){
   });
   // Hide adjuster when clicking outside
   document.addEventListener('click',hideAdjOnOutside,{passive:true});
+
+  // Bloque "ver más" cuando hay gastos ocultos por el límite
+  const moreEl=$('glimit-more'), moreBtn=$('glimit-more-btn');
+  if(limitActive){
+    const restantes=full.length-list.length;
+    moreBtn.textContent=`Ver ${restantes} gasto${restantes!==1?'s':''} más`;
+    moreEl.style.display='flex';
+  } else {
+    moreEl.style.display='none';
+  }
 }
 
 // Amount adjuster
